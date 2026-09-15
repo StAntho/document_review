@@ -1,3 +1,4 @@
 streamlit
 dotenv
 fastapi
+pymupdf==1.27.2.2
