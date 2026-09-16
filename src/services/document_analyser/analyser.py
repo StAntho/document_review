@@ -4,11 +4,15 @@ from schemas.document import DocumentResponse, ChunkResponse
 from .format_analyse import analysing_format
 from factories.doc_extractor import EXTRACTORS
 from .normalizer import normalize
+from .exceptions import UnsupportedFormatError
 
 class DocumentAnalyser:
     def analyse(self, path: str) -> dict:
         fmt = analysing_format(path)
         extractor = EXTRACTORS.get(fmt)
+
+        if not extractor:
+            raise UnsupportedFormatError(fmt)
 
         chunks = extractor().extract(path)
         structure = {}

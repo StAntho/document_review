@@ -1,5 +1,6 @@
 import fitz
 from .base import BaseExtractor, DocumentChunk
+from services.document_analyser.exceptions import UnsupportedFormatError
 
 class PDFExtractor(BaseExtractor):
     def extract(self, path: str) -> list[DocumentChunk]:
@@ -12,6 +13,7 @@ class PDFExtractor(BaseExtractor):
             chunks.extend(page_chunks)
             if not page_chunks:
                 scanned_pages.append(page_num)
+                fmt = "scanned_page"
 
             for table in page.find_tables():
                 chunks.append(DocumentChunk(
@@ -19,6 +21,9 @@ class PDFExtractor(BaseExtractor):
                     type = "table",
                     page = page_num,
                 ))
+
+        if scanned_pages:
+            raise UnsupportedFormatError(fmt)
 
         chunks.sort(key=lambda c: c.page)
         return chunks
