@@ -2,6 +2,7 @@ from pathlib import Path
 from fastapi import Depends, UploadFile, HTTPException
 import shutil, uuid
 from .document_analyser.analyser import DocumentAnalyser
+from .document_analyser.search import search_chunks
 from.document_analyser.exceptions import UnsupportedFormatError
 
 class DocumentAnalyserService:
@@ -29,3 +30,10 @@ class DocumentAnalyserService:
 
         finally:
             path.unlink(missing_ok=True)
+
+        
+    def search(self, chunks: list[dict], query: str) -> dict:
+        return {
+            "query": query,
+            "results": search_chunks(chunks, query),
+        }
