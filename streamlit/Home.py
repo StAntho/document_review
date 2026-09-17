@@ -15,6 +15,7 @@ param2 = "./markdown"
 # === API ===
 load_dotenv()
 URL_ANALYSE_API = f"{os.getenv('STREAMLIT_URL_API')}document_analyser/upload"
+URL_SEARCH_API = f"{os.getenv('STREAMLIT_URL_API')}document_analyser/search"
 HEADERS = {
     "X-API-Key": os.getenv('SECURITY_API_KEY')
 }
@@ -83,3 +84,33 @@ if document:
         st.markdown("#### 🔍 Recherche dans le document")
         search_query = st.text_input("Rechercher un mot ou une expression")
 
+        if search_query:
+            search_response = requests.post(
+                URL_SEARCH_API,
+                json={"chunks": result["chunks"], "query": search_query},
+                headers=HEADERS
+            )
+
+            if search_response.status_code != 200:
+                st.error(f"Erreur {search_response.status_code} : {search_response.text}")
+            else:
+                search_results = search_response.json()["results"]
+                st.write(f"{len(search_results)} résultat(s) pour « {search_query} »")
+
+                CONTEXT_LABELS = {
+                    "table": "📊 Tableau",
+                    "section": "🏷️ Titre + contenu",
+                    "paragraph": "📝 Paragraphe",
+                }
+
+                for res in search_results:
+                    match = res["match"]
+                    label = CONTEXT_LABELS.get(res["context_type"], res["context_type"])
+                    with st.expander(f"{label} — page {match['page']} — « {match['content'][:80]} »", expanded=False):
+                        for chunk in res["context"]:
+                            if chunk["type"] == "table":
+                                st.write(chunk["content"])
+                            elif chunk["type"] in ("title", "subtitle", "heading"):
+                                st.markdown(f"**{chunk['content']}**")
+                            else:
+                                st.write(chunk["content"])
