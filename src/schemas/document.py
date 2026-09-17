@@ -13,3 +13,16 @@ class ChunkResponse(BaseModel):
     level: int
     page: int
     metadata: dict
+
+class SearchResponse(BaseModel):
+    query: str
+    results: list[SearchResult]
+
+class SearchResult(BaseModel):
+    match: ChunkResponse
+    context_type: str
+    context: list[ChunkResponse]
+        
+class SearchRequest(BaseModel):
+    chunks: list[ChunkResponse]
+    query: str

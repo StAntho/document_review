@@ -2,10 +2,13 @@ import streamlit as st
 from dotenv import load_dotenv
 import os, tempfile, requests
 from pathlib import Path
+import pandas as pd
 
 # === Init session state ===
 if "analyse_done" not in st.session_state:
     st.session_state.analyse_done = False
+if "extraction_response" not in st.session_state:
+    st.session_state.extraction_response = None
 
 param2 = "./markdown"
 
@@ -61,4 +64,22 @@ if document:
                 st.session_state.key_dates = None
 
             else:
+                st.session_state.extraction_response = None
                 st.error(f"Erreur {response.status_code} : {response.text}")
+
+    if st.session_state.extraction_response:
+        result = st.session_state.extraction_response
+
+        st.markdown(f"**Fichier :** `{result['path']}` — **Format détecté :** `{result['format']}`")
+
+        st.markdown(f"#### 📑 Chunks fait ({len(result['chunks'])})")
+        if result["chunks"]:
+            df = pd.DataFrame(result["chunks"])
+            st.dataframe(df, use_container_width=True)
+        else:
+            st.write("Aucun chunk extrait.")
+
+        
+        st.markdown("#### 🔍 Recherche dans le document")
+        search_query = st.text_input("Rechercher un mot ou une expression")
+
