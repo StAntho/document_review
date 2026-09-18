@@ -1,6 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
-import os, tempfile, requests
+import os, tempfile, requests, json, base64
 from pathlib import Path
 import pandas as pd
 
@@ -16,6 +16,7 @@ param2 = "./markdown"
 load_dotenv()
 URL_ANALYSE_API = f"{os.getenv('STREAMLIT_URL_API')}document_analyser/upload"
 URL_SEARCH_API = f"{os.getenv('STREAMLIT_URL_API')}document_analyser/search"
+URL_HIGHLIGHT_API = f"{os.getenv('STREAMLIT_URL_API')}document_analyser/highlight"
 HEADERS = {
     "X-API-Key": os.getenv('SECURITY_API_KEY')
 }
@@ -114,3 +115,21 @@ if document:
                                 st.markdown(f"**{chunk['content']}**")
                             else:
                                 st.write(chunk["content"])
+
+                        if st.session_state.tmp_name:
+                            with open(st.session_state.tmp_name, "rb") as f:
+                                resp = requests.post(
+                                    URL_HIGHLIGHT_API, 
+                                    files={"file": (filename, f, "application/pdf")},
+                                    data={"page_num": match["page"], "query":search_query, "chunks": json.dumps(res["context"])},
+                                    headers=HEADERS,
+                                )
+                            data = resp.json()
+                            img_bytes, nb_hits = base64.b64decode(data["image_base64"]), data["nb_hits"]
+                            if img_bytes:
+                                caption = (
+                                    f"Page {match['page']} — {nb_hits} occurrence(s) surlignée(s)"
+                                    if nb_hits else
+                                    f"Page {match['page']} — surlignage non localisé automatiquement"
+                                )
+                                st.image(img_bytes, caption=caption, use_container_width=True)

@@ -26,3 +26,7 @@ class SearchResult(BaseModel):
 class SearchRequest(BaseModel):
     chunks: list[ChunkResponse]
     query: str
+
+class HighlightResponse(BaseModel):
+    image_base64:str
+    nb_hits: int
